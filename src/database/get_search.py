@@ -37,6 +37,7 @@ async def search_tickets(
     region: Optional[str] = Query(None, alias="region"),
     start_date: Optional[str] = Query(None, alias="start_date"),
     end_date: Optional[str] = Query(None, alias="end_date"),
+    artist_name: Optional[str] = Query(None, alias="artist_name")  # artist_name 검색 파라미터 추가
 ):
 
     # MongoDB 쿼리 조건 설정
@@ -59,6 +60,10 @@ async def search_tickets(
         query["category"] = {"$regex": category, "$options": "i"}
     if region:
         query["region"] = {"$regex": region, "$options": "i"}
+
+    # artist_name 검색 조건 추가
+    if artist_name:
+        query["artist.artist_name"] = {"$regex": artist_name, "$options": "i"}  # artist_name을 대소문자 구분 없이 검색
 
     # MongoDB에서 쿼리 실행
     cursor = collection.find(query)
