@@ -33,12 +33,11 @@ router = APIRouter()
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
 async def search_tickets(
-    title: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    artist_name: Optional[str] = Query(None)
 ):
     query = {}
 
@@ -52,15 +51,17 @@ async def search_tickets(
         if end_date:
             query["end_date"] = {"$gte": start_date}
 
-    if title:
-        query["title"] = {"$regex": title, "$options": "i"}
     if category:
         query["category"] = category
+
     if region:
         query["region"] = region
 
-    if artist_name:
-        query["artist.artist_name"] = {"$regex": artist_name, "$options": "i"}
+    if keyword:
+        query["$or"] = [
+                {"title": {"$regex": keyword, "$options": "i"}},
+                {"artist.artist_name": {"$regex": keyword, "$options": "i"}}
+                ]
 
     cursor = collection.find(query)
     tickets = []
