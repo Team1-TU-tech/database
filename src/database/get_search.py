@@ -20,7 +20,9 @@ class TicketData(BaseModel):
     location: Optional[str]
     start_date: Optional[str]
     end_date: Optional[str]
-
+    id: str
+    isExclusive: bool
+    onSale: bool 
 
 # 날짜 문자열을 datetime 객체로 변환하는 함수
 def parse_date(date_string: str) -> Optional[datetime]:
@@ -71,12 +73,18 @@ async def search_tickets(
     # 결과 반환
     tickets = []
     async for ticket in cursor:
+        hosts = ticket.get("hosts", [])
+        isexclusive = len(hosts) <= 1
+        ticket_url = any(host.get("ticket_url") is not None for host in hosts)
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
             "location": ticket.get("location"),
             "start_date": ticket.get("start_date"),
             "end_date": ticket.get("end_date"),
+            "id": str(ticket.get("_id")),
+            "isExclusive": isexclusive,
+            "onSale": ticket_url
         }
         tickets.append(ticket_data)
 
