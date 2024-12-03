@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from typing import Optional
 
 # MongoDB 연결
-client = MongoClient("mongodb+srv://hahahello777:akXSTBrO5Q5OkWb3@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient("mongodb+srv://hahahello777:NDWdS4f47d3uLnZ3@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
 db = client['test']  # 데이터베이스 이름
 collection = db['test']  # 컬렉션 이름
 
