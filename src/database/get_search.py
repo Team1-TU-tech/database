@@ -50,7 +50,7 @@ async def search_tickets(
         start_date = parse_date(start_date)
         if start_date:
             query["start_date"] = {"$lte": end_date}  
-
+    
     if end_date:
         end_date = parse_date(end_date)
         if end_date:
@@ -58,12 +58,12 @@ async def search_tickets(
 
     if title:
         query["title"] = {"$regex": title, "$options": "i"}  # 대소문자 구분 없이 검색
+
     if category:
         query["category"] = category
-        #query["category"] = {"$regex": category, "$options": "i"}
+
     if region:
         query["region"] = region
-        #query["region"] = {"$regex": region, "$options": "i"}
 
     # artist_name 검색 조건 추가
     if artist_name:
@@ -71,13 +71,26 @@ async def search_tickets(
 
     # MongoDB에서 쿼리 실행
     cursor = collection.find(query)
+    kst = pytz.timezone('Asia/Seoul')
+    today = datetime.today(kst)
 
     # 결과 반환
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
+        # 독점 판별
         isexclusive = len(hosts) <= 1
         ticket_url = any(host.get("ticket_url") is not None for host in hosts)
+        end_date_str = ticket.get("end_date")
+        try:
+            ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d")
+            if ticket_url and ticket_end_date>=today:
+                on_sale = True
+            else:
+                ons_sale = False
+        except (ValueError, TypeError):
+            on_sale = False
+
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
@@ -86,7 +99,7 @@ async def search_tickets(
             "end_date": ticket.get("end_date"),
             "id": str(ticket.get("_id")),
             "isExclusive": isexclusive,
-            "onSale": ticket_url
+            "onSale": on_sale
         }
         tickets.append(ticket_data)
 
