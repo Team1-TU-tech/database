@@ -1,12 +1,14 @@
+from pymongo import MongoClient
 from fastapi import APIRouter, Query, HTTPException
 from typing import List, Optional
 from bson import ObjectId
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
+import pytz
 
 # MongoDB 연결을 위한 클라이언트
-client = AsyncIOMotorClient("mongodb+srv://hahahello777:NDWdS4f47d3uLnZ3@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
+client = AsyncIOMotorClient("mongodb+srv://hahahello777:VIiYTK9NobgeM1hk@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
 db = client['test']
 collection = db['test']
 
@@ -78,8 +80,8 @@ async def search_tickets(
         try:
             ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d")
             # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
-            if ticket_url and ticket_end_date:
-                on_sale = ticket_end_date >= today
+            if ticket_url and ticket_end_date>=today:
+                on_sale = True
             else:
                 on_sale = False
         except (ValueError, TypeError):
