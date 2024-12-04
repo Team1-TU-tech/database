@@ -64,11 +64,26 @@ async def search_tickets(
                 ]
 
     cursor = collection.find(query)
+
+    # 한국 시간(KST) 기준으로 오늘 날짜 구하기
+    kst = pytz.timezone('Asia/Seoul')
+    today = datetime.now(kst)
+
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
         isexclusive = len(hosts) <= 1
         ticket_url = any(host.get("ticket_url") is not None for host in hosts)
+        end_date_str = ticket.get("end_date")
+        try:
+            ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d")
+            # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
+            if ticket_url and ticket_end_date:
+                on_sale = ticket_end_date >= today
+            else:
+                on_sale = False
+        except (ValueError, TypeError):
+            on_sale = False  # end_date 형식 오류시 on_sale은 False
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
