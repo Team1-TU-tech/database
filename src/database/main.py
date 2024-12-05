@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from database.routers import tickets  # tickets 라우터를 포함한 모듈
+from src.database.routers import tickets  # tickets 라우터를 포함한 모듈
 
 app = FastAPI()
 
