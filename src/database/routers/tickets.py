@@ -4,11 +4,17 @@ from bson import ObjectId
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
-from database.routers.log_handler import *
+from src.database.routers.log_handler import *
+import os
+import certifi
+
+mongopass = os.getenv("MONGOPASS")
+router = APIRouter()
 
 # MongoDB 연결을 위한 클라이언트
 try:
-    client = AsyncIOMotorClient("mongodb+srv://summerham22:FEm4DxNh3oxLK3rM@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
+    url = f"mongodb+srv://summerham22:{mongopass}@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0"
+    client = AsyncIOMotorClient(url, tlsCAFile=certifi.where())
     db = client['test']
     collection = db['test']
     print("MongoDB connected successfully!")
@@ -33,8 +39,6 @@ def parse_date(date_string: str) -> Optional[datetime]:
         return datetime.strptime(date_string, "%Y.%m.%d").strftime("%Y.%m.%d")
     except ValueError:
         return None
-
-router = APIRouter()
 
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
@@ -80,6 +84,8 @@ async def search_tickets(
 
     cursor = collection.find(query)
     print(f"MongoDB Query: {query}")
+    # MongoDB에서 검색
+
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
