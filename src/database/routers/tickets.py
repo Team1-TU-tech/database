@@ -81,7 +81,6 @@ async def search_tickets(
         try:
             ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d").strftime("%Y.%m.%d")
             # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
-            print(f"parsed end_date: {ticket_end_date}, today: {today}")
             if ticket_url and ticket_end_date>=today:
                 on_sale = True
             else:
