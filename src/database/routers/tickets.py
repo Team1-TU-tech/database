@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Request
 from typing import List, Optional
 from bson import ObjectId
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
+from database.routers.log_handler import *
 
 # MongoDB 연결을 위한 클라이언트
-client = AsyncIOMotorClient("mongodb+srv://hahahello777:NDWdS4f47d3uLnZ3@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
-db = client['test']
-collection = db['test']
+try:
+    client = AsyncIOMotorClient("mongodb+srv://summerham22:FEm4DxNh3oxLK3rM@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
+    db = client['test']
+    collection = db['test']
+    print("MongoDB connected successfully!")
+
+except Exception as e:
+    print(f"MongoDB connection error: {e}")
 
 # Pydantic 모델 정의
 class TicketData(BaseModel):
@@ -33,12 +39,21 @@ router = APIRouter()
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
 async def search_tickets(
+    request: Request, # 요청 객체 추가
     keyword: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
 ):
+    
+    #############로그데이터를 위한 로직 추가##############
+     # 현재 시간 자동 추출
+    current_timestamp = datetime.now().isoformat()
+    device = request.headers.get("User-Agent", "Unknown")
+    user_id = request.headers.get("user_id", "anonymous")  # user_id가 없으면 "anonymous"로 기본값 설정
+    ###############################################
+    
     query = {}
 
     if start_date:
@@ -64,6 +79,7 @@ async def search_tickets(
                 ]
 
     cursor = collection.find(query)
+    print(f"MongoDB Query: {query}")
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
@@ -80,8 +96,23 @@ async def search_tickets(
             "onSale": ticket_url
         }
         tickets.append(ticket_data)
+    
+    try:
+        log_event(
+            current_timestamp=current_timestamp,
+            user_id=user_id,  # 헤더에서 받은 user_id 사용
+            device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
+            action="Search",   # 액션 종류: 'Search'
+            category=category, # 카테고리
+            region=region,     # 지역
+            keyword=keyword
+            
+    )
+    except Exception as e:
+        print(f"Error logging event: {e}")
 
-    return tickets
+
+    print("Log event should have been recorded.")
 
 # ID로 상세 조회
 @router.get("/detail/{id}")

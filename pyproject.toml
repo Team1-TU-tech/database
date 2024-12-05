@@ -10,11 +10,20 @@ dependencies = [
     "motor>=3.6.0",
     "fastapi>=0.115.5",
     "uvicorn>=0.32.1",
+    "database @ file:///${PROJECT_ROOT}/",
+    "dnspython>=2.7.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
 license = {text = "MIT"}
 
-
 [tool.pdm]
 distribution = false
+
+[dependency-groups]
+test = [
+    "pytest>=8.3.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
