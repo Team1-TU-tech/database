@@ -77,9 +77,8 @@ async def search_tickets(
         hosts = ticket.get("hosts", [])
         isexclusive = len(hosts) <= 1
         ticket_url = any(host.get("ticket_url") is not None for host in hosts)
-        end_date_str = ticket_data['end_date']
+        end_date_str = ticket.get('end_date')
         try:
-            print(end_date_str)
             ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d").strftime("%Y.%m.%d")
             # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
             print(f"parsed end_date: {ticket_end_date}, today: {today}")
@@ -90,7 +89,6 @@ async def search_tickets(
         except (ValueError, TypeError) as e:
             print(f"Error parsing end_date: {e}")
             on_sale = False  # end_date 형식 오류시 on_sale은 False
-            print(ticket_url,on_sale)
 
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
@@ -100,7 +98,7 @@ async def search_tickets(
             "end_date": ticket.get("end_date"),
             "id": str(ticket.get("_id")),
             "isExclusive": isexclusive,
-            "onSale": ticket_url
+            "onSale": on_sale
         }
         tickets.append(ticket_data)
 
