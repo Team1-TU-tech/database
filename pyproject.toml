@@ -1,11 +1,16 @@
 [project]
 name = "database"
-version = "0.1.0"
+version = "0.2.0"
 description = "Default template for PDM package"
 authors = [
     {name = "hahahellooo", email = "hahahello777@gmail.com"},
 ]
-dependencies = []
+dependencies = [
+    "pymongo>=4.9.2",
+    "motor>=3.6.0",
+    "fastapi>=0.115.5",
+    "uvicorn>=0.32.1",
+]
 requires-python = "==3.11.*"
 readme = "README.md"
 license = {text = "MIT"}
