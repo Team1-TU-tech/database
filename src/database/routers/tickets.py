@@ -114,11 +114,11 @@ async def search_tickets(
             keyword=keyword
             
     )
+        print("Log event should have been recorded.")
     except Exception as e:
         print(f"Error logging event: {e}")
 
-
-    print("Log event should have been recorded.")
+    return tickets
 
 # ID로 상세 조회
 @router.get("/detail/{id}")
