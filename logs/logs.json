@@ -1,2 +1,0 @@
-{"timestamp": "2024-12-05T15:47:13.125306", "level": "INFO", "message": "{'timestamp': '2024-12-05T15:47:13.125192', 'user_id': '12345', 'device': 'Mozilla/5.0', 'action': 'login'}"}
-{"timestamp": "2024-12-05T15:47:13.125432", "level": "INFO", "message": "{'timestamp': '2024-12-05T15:47:13.125372', 'user_id': '67890', 'device': 'Safari/13.0', 'action': 'search', 'region': 'Seoul'}"}

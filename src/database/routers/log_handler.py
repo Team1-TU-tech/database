@@ -25,10 +25,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Kafka 서버 환경 변수에서 값을 읽음
-KAFKA_SERVER = os.getenv("KAFKA_SERVER", "kafka:9092")  # 기본값은 kafka:9092
+KAFKA_SERVER = os.getenv("KAFKA_SERVER")
 
 producer = KafkaProducer(
     bootstrap_servers=KAFKA_SERVER,
+    acks='all',
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
