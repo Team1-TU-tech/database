@@ -13,10 +13,10 @@ router = APIRouter()
 
 # MongoDB 연결을 위한 클라이언트
 try:
-    url = f"mongodb+srv://summerham22:{mongopass}@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0"
+    url = f"mongodb+srv://summerham22:{mongopass}@cluster0.5vlv3.mongodb.net/tut?retryWrites=true&w=majority&appName=Cluster0"
     client = AsyncIOMotorClient(url, tlsCAFile=certifi.where())
-    db = client['test']
-    collection = db['test']
+    db = client['tut']
+    collection = db['ticket']
     print("MongoDB connected successfully!")
 
 except Exception as e:
@@ -108,7 +108,7 @@ async def search_tickets(
             current_timestamp=current_timestamp,
             user_id=user_id,  # 헤더에서 받은 user_id 사용
             device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
-            action="Search",   # 액션 종류: 'Search'
+            action="search",   # 액션 종류: 'Search'
             category=category, # 카테고리
             region=region,     # 지역
             keyword=keyword
@@ -122,13 +122,36 @@ async def search_tickets(
 
 # ID로 상세 조회
 @router.get("/detail/{id}")
-async def get_detail_by_id(id: str):
+async def get_detail_by_id(request: Request, id: str):
+
+    #############로그데이터를 위한 로직 추가##############
+    current_timestamp = datetime.now().isoformat()
+    device = request.headers.get("User-Agent", "Unknown")
+    user_id = request.headers.get("user_id", "anonymous")  # user_id가 없으면 "anonymous"로 기본값 설정
+    ###############################################
+
     try:
         object_id = ObjectId(id)
         result = await collection.find_one({"_id": object_id})
 
+        # ticket_url이 존재하면 클릭 여부를 True로 설정하고, 해당 URL을 기록
+        ticket_url = result.get("ticket_url", None)  # ticket_url 값을 가져오고, 없으면 빈 문자열로 설정
+        ticket_url_click = bool(ticket_url)  # ticket_url이 존재하면 클릭한 것으로 간주 (True), 없으면 False
+
         if result:
             result['_id'] = str(result['_id'])
+            
+            log_event(
+                current_timestamp=current_timestamp,
+                user_id=user_id,  # 헤더에서 받은 user_id 사용
+                device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
+                action="view_detail",   # 액션 종류: 'view_detail' (상세 조회)
+                category=result['category'], # 카테고리
+                region=result['region'],     # 지역
+                ticket_url=ticket_url,  # 티켓 URL
+                ticket_url_click=ticket_url_click  # 티켓 URL 클릭 여부 (True/False)
+                )
+            
             return {"data": result}
         else:
             raise HTTPException(status_code=404, detail="Item not found")

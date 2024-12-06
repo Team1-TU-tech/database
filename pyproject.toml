@@ -1,6 +1,6 @@
 [project]
 name = "database"
-version = "0.2.1"
+version = "0.2.3"
 description = "Default template for PDM package"
 authors = [
     {name = "hahahellooo", email = "hahahello777@gmail.com"},
@@ -18,6 +18,7 @@ dependencies = [
     "boto3>=1.35.76",
     "kafka-python>=2.0.2",
     "python-dotenv>=1.0.1",
+    "fsspec>=2024.10.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
