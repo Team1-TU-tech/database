@@ -9,8 +9,8 @@ import pytz
 
 # MongoDB 연결을 위한 클라이언트
 client = AsyncIOMotorClient("mongodb+srv://hahahello777:VIiYTK9NobgeM1hk@cluster0.5vlv3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0")
-db = client['test']
-collection = db['test']
+db = client['tut']
+collection = db['ticket']
 
 # Pydantic 모델 정의
 class TicketData(BaseModel):
