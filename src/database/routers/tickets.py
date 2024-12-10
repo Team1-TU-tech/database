@@ -8,13 +8,12 @@ from src.database.routers.log_handler import *
 import os
 import certifi
 
-mongopass = os.getenv("MONGOPASS")
+mongo_uri = os.getenv("MONGO_URI")
 router = APIRouter()
 
 # MongoDB 연결을 위한 클라이언트
 try:
-    url = f"mongodb+srv://summerham22:{mongopass}@cluster0.5vlv3.mongodb.net/tut?retryWrites=true&w=majority&appName=Cluster0"
-    client = AsyncIOMotorClient(url, tlsCAFile=certifi.where())
+    client = AsyncIOMotorClient(mongo_uri)
     db = client['tut']
     collection = db['ticket']
     print("MongoDB connected successfully!")
@@ -40,18 +39,6 @@ def parse_date(date_string: str) -> Optional[datetime]:
     except ValueError:
         return None
 
-# 카테고리 매핑 함수
-def map_category(category: Optional[str]) -> Optional[str]:
-    category_map = {
-        "뮤지컬": "뮤지컬/연극",
-        "연극": "뮤지컬/연극",
-        "뮤지컬/연극": "뮤지컬/연극",
-        "전시": "전시/행사",
-        "행사": "전시/행사",
-        "전시/행사": "전시/행사"
-    }
-    return category_map.get(category)
-
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
 async def search_tickets(
@@ -69,12 +56,12 @@ async def search_tickets(
     device = request.headers.get("User-Agent", "Unknown")
     user_id = request.headers.get("user_id", "anonymous")  # user_id가 없으면 "anonymous"로 기본값 설정
     ###############################################
+    query = {}
    
     # 카테고리 매핑 적용
     if category:
-        category = map_category(category)
-
-    query = {}
+        categories = category.split("/")
+        query["category"] = {"$in": categories}
 
     if start_date:
         start_date = parse_date(start_date)
