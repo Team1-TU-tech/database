@@ -11,7 +11,6 @@ dependencies = [
     "fastapi>=0.115.5",
     "uvicorn>=0.32.1",
     "dnspython>=2.7.0",
-    "database @ file:///${PROJECT_ROOT}/",
     "certifi>=2024.8.30",
     "pandas>=2.2.3",
     "pyarrow>=18.1.0",
