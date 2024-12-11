@@ -48,4 +48,3 @@ async def get_banner():
         return tickets
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching banner tickets: {str(e)}")
-

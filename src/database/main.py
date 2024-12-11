@@ -6,4 +6,3 @@ app = FastAPI()
 # 라우터를 메인 앱에 연결
 app.include_router(tickets.router)
 app.include_router(banner.router)
-

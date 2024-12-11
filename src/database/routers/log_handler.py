@@ -41,6 +41,7 @@ def log_event(user_id: str, device: str, action: str, topic: str, **kwargs):
         "user_id": user_id,
         "device": device,
         "action": action,
+        "topic": topic,
         **kwargs
     }
 

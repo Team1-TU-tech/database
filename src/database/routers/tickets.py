@@ -1,3 +1,4 @@
+import pytz
 from fastapi import APIRouter, Query, HTTPException, Request
 from typing import List, Optional
 from bson import ObjectId
@@ -54,10 +55,10 @@ async def search_tickets(
 ):
     
     #############로그데이터를 위한 로직 추가##############
-     # 현재 시간 자동 추출
-    current_timestamp = datetime.now().isoformat()
+    #body = await request.json()
     device = request.headers.get("User-Agent", "Unknown")
-    user_id = request.headers.get("user_id", "anonymous")  # user_id가 없으면 "anonymous"로 기본값 설정
+    #user_id = body.get("id", "anonymous")
+    user_id = request.headers.get("id", "anonymous")
     ###############################################
     query = {}
    
@@ -89,11 +90,29 @@ async def search_tickets(
     print(f"MongoDB Query: {query}")
     # MongoDB에서 검색
 
+    # 한국 시간(KST) 기준으로 오늘 날짜 구하기
+    kst = pytz.timezone('Asia/Seoul')
+    today_date = datetime.now(kst)
+    today = datetime.strftime(today_date, "%Y.%m.%d")
+
+
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
         isexclusive = len(hosts) <= 1
         ticket_url = any(host.get("ticket_url") is not None for host in hosts)
+        end_date_str = ticket.get('end_date')
+        try:
+            ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d").strftime("%Y.%m.%d")
+            # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
+            if ticket_url and ticket_end_date>=today:
+                on_sale = True
+            else:
+                on_sale = False
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing end_date: {e}")
+            on_sale = False  # end_date 형식 오류시 on_sale은 False
+
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
@@ -102,13 +121,12 @@ async def search_tickets(
             "end_date": ticket.get("end_date"),
             "id": str(ticket.get("_id")),
             "isExclusive": isexclusive,
-            "onSale": ticket_url
+            "onSale": on_sale
         }
         tickets.append(ticket_data)
     
     try:
         log_event(
-            current_timestamp=current_timestamp,
             user_id=user_id,  # 헤더에서 받은 user_id 사용
             device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
             action="search",   # 액션 종류: 'Search'
@@ -129,9 +147,10 @@ async def search_tickets(
 async def get_detail_by_id(request: Request, id: str):
 
     #############로그데이터를 위한 로직 추가##############
-    current_timestamp = datetime.now().isoformat()
+    #body = await request.json()
     device = request.headers.get("User-Agent", "Unknown")
-    user_id = request.headers.get("user_id", "anonymous")  # user_id가 없으면 "anonymous"로 기본값 설정
+    #user_id = body.get("id", "anonymous")
+    user_id = request.headers.get("id", "anonymous")
     ###############################################
 
     try:
@@ -142,12 +161,12 @@ async def get_detail_by_id(request: Request, id: str):
             result['_id'] = str(result['_id'])
             
             log_event(
-                current_timestamp=current_timestamp,
                 user_id=user_id,  # 헤더에서 받은 user_id 사용
                 device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
                 action="view_detail",   # 액션 종류: 'view_detail' (상세 조회)
                 topic="view_detail_log", #카프카 토픽 구별을 위한 컬럼
-                ticket_id= object_id,
+                ticket_id= result['_id'],
+                title= result['title'],
                 category=result['category'] if result['category'] is not None else "None", # 카테고리
                 region=result['region'] if result['region'] is not None else "None",     # 지역
                 )
