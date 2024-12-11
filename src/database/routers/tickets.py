@@ -7,6 +7,9 @@ from datetime import datetime
 from src.database.routers.log_handler import *
 import os
 import certifi
+from dotenv import load_dotenv  # 추가
+
+load_dotenv()  # .env 파일에서 변수 로드
 
 mongo_uri = os.getenv("MONGO_URI")
 router = APIRouter()
@@ -109,9 +112,10 @@ async def search_tickets(
             user_id=user_id,  # 헤더에서 받은 user_id 사용
             device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
             action="search",   # 액션 종류: 'Search'
-            category=category, # 카테고리
-            region=region,     # 지역
-            keyword=keyword
+            topic="search_log", #카프카 토픽 구별을 위한 컬럼
+            category=category if category is not None else "None", # 카테고리
+            region=region if region is not None else "None",
+            keyword=keyword if keyword is not None else "None"
             
     )
         print("Log event should have been recorded.")
@@ -134,10 +138,6 @@ async def get_detail_by_id(request: Request, id: str):
         object_id = ObjectId(id)
         result = await collection.find_one({"_id": object_id})
 
-        # ticket_url이 존재하면 클릭 여부를 True로 설정하고, 해당 URL을 기록
-        ticket_url = result.get("ticket_url", None)  # ticket_url 값을 가져오고, 없으면 빈 문자열로 설정
-        ticket_url_click = bool(ticket_url)  # ticket_url이 존재하면 클릭한 것으로 간주 (True), 없으면 False
-
         if result:
             result['_id'] = str(result['_id'])
             
@@ -146,10 +146,10 @@ async def get_detail_by_id(request: Request, id: str):
                 user_id=user_id,  # 헤더에서 받은 user_id 사용
                 device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
                 action="view_detail",   # 액션 종류: 'view_detail' (상세 조회)
-                category=result['category'], # 카테고리
-                region=result['region'],     # 지역
-                ticket_url=ticket_url,  # 티켓 URL
-                ticket_url_click=ticket_url_click  # 티켓 URL 클릭 여부 (True/False)
+                topic="view_detail_log", #카프카 토픽 구별을 위한 컬럼
+                ticket_id= object_id,
+                category=result['category'] if result['category'] is not None else "None", # 카테고리
+                region=result['region'] if result['region'] is not None else "None",     # 지역
                 )
             
             return {"data": result}

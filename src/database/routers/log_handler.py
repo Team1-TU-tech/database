@@ -34,7 +34,7 @@ producer = KafkaProducer(
 )
 
 # 로그 이벤트 함수 정의
-def log_event(user_id: str, device: str, action: str, **kwargs):
+def log_event(user_id: str, device: str, action: str, topic: str, **kwargs):
     # 로그 메시지 생성
     log_message = {
         "timestamp": datetime.now().isoformat(),
@@ -45,9 +45,9 @@ def log_event(user_id: str, device: str, action: str, **kwargs):
     }
 
     # Kafka에 로그 메시지 전송
-    producer.send('logs', log_message)
+    producer.send(topic, log_message)
     producer.flush()
-    print("로그 데이터 전송 완료!")
+    print(f"로그 데이터가 '{topic}' 토픽에 전송 완료!")
     
     # INFO 로그 기록
     #logger.info(log_message)
