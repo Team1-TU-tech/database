@@ -14,6 +14,7 @@ services:
       - kafka1
       - kafka2
       - kafka3
+    restart: always
     networks:
       - kafka_network
 

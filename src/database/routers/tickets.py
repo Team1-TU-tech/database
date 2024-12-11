@@ -1,3 +1,4 @@
+import pytz
 from fastapi import APIRouter, Query, HTTPException, Request
 from typing import List, Optional
 from bson import ObjectId
@@ -85,12 +86,30 @@ async def search_tickets(
     cursor = collection.find(query)
     print(f"MongoDB Query: {query}")
     # MongoDB에서 검색
+    
+
+    # 한국 시간(KST) 기준으로 오늘 날짜 구하기
+    kst = pytz.timezone('Asia/Seoul')
+    today_date = datetime.now(kst)
+    today = datetime.strftime(today_date, "%Y.%m.%d")
 
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
         isexclusive = len(hosts) <= 1
         ticket_url = any(host.get("ticket_url") is not None for host in hosts)
+        end_date_str = ticket.get('end_date')
+        try:
+            ticket_end_date = datetime.strptime(end_date_str, "%Y.%m.%d").strftime("%Y.%m.%d")
+            # ticket_url이 존재하고, end_date가 오늘 이후일 때만 on_sale을 True로 설정
+            if ticket_url and ticket_end_date>=today:
+                on_sale = True
+            else:
+                on_sale = False
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing end_date: {e}")
+            on_sale = False  # end_date 형식 오류시 on_sale은 False
+
         ticket_data = {
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
@@ -99,7 +118,7 @@ async def search_tickets(
             "end_date": ticket.get("end_date"),
             "id": str(ticket.get("_id")),
             "isExclusive": isexclusive,
-            "onSale": ticket_url
+            "onSale": on_sale
         }
         tickets.append(ticket_data)
     
