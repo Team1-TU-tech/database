@@ -1,5 +1,5 @@
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from io import BytesIO
 from fastapi import FastAPI
 from pymongo import MongoClient
@@ -35,7 +35,7 @@ s3_client = boto3.client('s3',
 time_format = datetime.datetime.now()
 timestamp = time_format.strftime("%Y-%m-%d_%H-%M-%S")
 
-def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'logs/') -> List[dict]:
+def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'view_detail_log/') -> List[dict]:
     try:
         # S3에서 디렉토리 내 파일 목록 가져오기
         response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=directory)
@@ -78,39 +78,31 @@ def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'logs/') -> List[
         print(f"Error reading from S3: {e}")
         return []
 
-# FastAPI 라우터 정의
-@app.get("/logs", response_model=List[dict])
-async def get_rank():
-    logs = get_logs()
-    if not logs:
-        return {"message": "No logs available or failed to fetch logs."}
-    return logs
-
 # Pydantic 모델 정의
 class RankItem(BaseModel):
-    id: str = Field(alias="_id")  # ObjectId를 문자열로 처리
-    action: str
+    ticket_id: str
     clicks: int
 
-    class Config:
-        json_encoders = {
-            ObjectId: str  # ObjectId를 문자열로 변환
-        }
-
-# MongoDB에 상위 클릭된 상품 저장
-def save_rank_to_mongo(top_products: List[dict]):
-    collection.delete_many({})  # 기존 데이터를 삭제하고 새로 저장
-    collection.insert_many(top_products)
-
 # MongoDB에서 상위 클릭된 상품 조회
-def get_rank_from_mongo(top: int = 5) -> List[RankItem]:
+def get_rank_from_mongo(top: int = 8) -> List[RankItem]:
     # MongoDB에서 데이터 조회 후 ObjectId를 문자열로 변환
     items = collection.find().limit(top)
-    return [RankItem(**{**item, "_id": str(item["_id"])}) for item in items]
+    valid_items = []
+    for item in items:
+        try:
+            # 필요한 필드가 모두 있는 경우에만 RankItem으로 변환
+            valid_item = RankItem(**{
+                "ticket_id": item.get("ticket_id", "unknown"),  # 기본값 설정
+                "clicks": item.get("clicks", 0)  # 기본값 설정
+            })
+            valid_items.append(valid_item)
+        except ValidationError as e:
+            print(f"Validation failed for item {item}: {e}")
+    return valid_items
 
 # FastAPI 라우터 정의
 @app.get("/rank", response_model=List[RankItem])
-async def get_rank(top: int = 5):
+async def get_rank(top: int = 8):
     # MongoDB에서 데이터 확인
     top_products = get_rank_from_mongo(top)
     if not top_products:  # MongoDB에 데이터가 없을 경우
@@ -119,18 +111,14 @@ async def get_rank(top: int = 5):
             print("No logs available or failed to fetch logs.")
             return []
 
-        # Action Counter를 사용하여 클릭 수 집계
-        action_counter = Counter()
-        for log in logs:
-            action = log.get('action')
-            if action:
-                action_counter[action] += 1
+        logs_df = pd.DataFrame(logs)
 
-        # 상위 상품 생성
-        top_products = [{"action": action, "clicks": count} for action, count in action_counter.most_common(top)]
-
-        # MongoDB에 저장
-        save_rank_to_mongo(top_products)
+        if 'ticket_id' in logs_df.columns:
+            count_df = logs_df.groupby('ticket_id').size().reset_index(name='clicks')
+            top_products = count_df.nlargest(top, 'clicks').to_dict('records')
+        else:
+            print("No 'ticket_id' column in logs.")
+            return []
 
         # 저장된 데이터 Pydantic 모델로 변환
         top_products = get_rank_from_mongo(top)
