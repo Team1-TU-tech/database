@@ -38,7 +38,7 @@ def get_this_weekend_dates():
     return saturday_str, sunday_str
 
 # FastAPI 엔드포인트: 이번 주 주말에 공연 중인 공연들 반환
-@app.get("/this_weekend", response_model=List[Dict[str, str]])
+@router.get("/this_weekend", response_model=List[Dict[str, str]])
 async def get_performances_this_weekend():
     # 이번 주 토요일과 일요일 날짜 구하기
     saturday, sunday = get_this_weekend_dates()
