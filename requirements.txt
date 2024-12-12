@@ -11,3 +11,4 @@ kafka-python>=2.0.2
 python-dotenv>=1.0.1
 fsspec>=2024.10.0
 pytz>=2024.2
+python-jose>=3.3.0
