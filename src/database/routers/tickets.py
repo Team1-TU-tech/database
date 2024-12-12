@@ -1,5 +1,5 @@
 import pytz
-from fastapi import APIRouter, Query, HTTPException, Request, Depends
+from fastapi import APIRouter, Query, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import List, Optional
 from bson import ObjectId
@@ -10,7 +10,6 @@ from src.database.routers.log_handler import *
 import os
 import certifi
 from dotenv import load_dotenv
-from jose import JWTError, jwt
 
 load_dotenv()  # .env 파일에서 변수 로드
 
@@ -46,34 +45,10 @@ def parse_date(date_string: str) -> Optional[datetime]:
         return None
 
 
-# 비밀키와 알고리즘 설정
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-# 토큰 디코딩 함수
-def get_user_id_from_token(authorization: str = Depends(oauth2_scheme)):
-    try:
-        # 'Bearer <token>' 형태의 Authorization 헤더에서 토큰 추출
-        token = authorization.split(" ")[1]
-        
-        # JWT 토큰 디코딩
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("id")
-        
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="User ID not found in token")
-        
-        return user_id
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token or expired token")
-
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
 async def search_tickets(
     request: Request, # 요청 객체 추가
-    user_id: str = Depends(get_user_id_from_token),
     keyword: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
@@ -84,6 +59,7 @@ async def search_tickets(
     #############로그데이터를 위한 로직 추가##############
     #body = await request.json()
     device = request.headers.get("User-Agent", "Unknown")
+    user_id = request.headers.get("id", "anonymous")
     #user_id = body.get("id", "anonymous")
     ###############################################
     query = {}

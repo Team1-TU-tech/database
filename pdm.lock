@@ -5,7 +5,7 @@
 groups = ["default", "test"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:ac3478bcbd44004694f9fdc6275ccf1c0ea58e0ba966c557fb76670fc4a321f9"
+content_hash = "sha256:ef998c0976b843d454c00868b199158b2aab58f880b549d9ffc5a3920e64f563"
 
 [[metadata.targets]]
 requires_python = "==3.11.*"
@@ -110,6 +110,30 @@ marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+
+[[package]]
+name = "database"
+version = "0.2.3"
+requires_python = "==3.11.*"
+path = "./."
+summary = "Default template for PDM package"
+groups = ["default"]
+dependencies = [
+    "boto3>=1.35.76",
+    "certifi>=2024.8.30",
+    "dnspython>=2.7.0",
+    "fastapi>=0.115.5",
+    "fsspec>=2024.10.0",
+    "kafka-python>=2.0.2",
+    "motor>=3.6.0",
+    "pandas>=2.2.3",
+    "pyarrow>=18.1.0",
+    "pymongo>=4.9.2",
+    "python-dotenv>=1.0.1",
+    "python-jose>=3.3.0",
+    "pytz>=2024.2",
+    "uvicorn>=0.32.1",
 ]
 
 [[package]]
