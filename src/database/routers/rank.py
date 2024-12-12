@@ -1,7 +1,7 @@
 from bson import ObjectId
 from pydantic import BaseModel, Field, ValidationError
 from io import BytesIO
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pymongo import MongoClient
 from collections import Counter
 from typing import List
@@ -14,7 +14,7 @@ from dotenv import load_dotenv  # 추가
 
 load_dotenv()  # .env 파일에서 변수 로드
 
-app = FastAPI()
+router = APIRouter()
 
 # MongoDB 연결
 client = MongoClient(os.getenv('MONGO_URI'))
@@ -84,7 +84,7 @@ def get_top_tickets(ticket_ids: List[str], top_n: int = 8) -> List[str]:
 
     return [ticket_id for ticket_id, _ in top_ticket_ids]
 
-@app.get("/top_tickets/")
+@router.get("/top_show")
 async def top_tickets():
     # S3에서 로그 데이터 가져오기
     ticket_ids = get_logs()
