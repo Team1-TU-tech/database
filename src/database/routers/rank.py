@@ -1,7 +1,7 @@
 from bson import ObjectId
 from pydantic import BaseModel, Field, ValidationError
 from io import BytesIO
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from collections import Counter
 from typing import List
@@ -19,7 +19,7 @@ app = FastAPI()
 # MongoDB 연결
 client = MongoClient(os.getenv('MONGO_URI'))
 db = client["tut"]
-collection = db["rank"]
+ticket_collection = db["ticket"]
 
 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -31,9 +31,6 @@ s3_client = boto3.client('s3',
                         aws_secret_access_key=aws_secret_access_key,
                         region_name=region_name
                         )
-
-time_format = datetime.datetime.now()
-timestamp = time_format.strftime("%Y-%m-%d_%H-%M-%S")
 
 def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'view_detail_log/') -> List[dict]:
     try:
@@ -53,7 +50,7 @@ def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'view_detail_log/
             return []
 
         # Parquet 파일을 읽어 pandas DataFrame으로 결합
-        all_logs = []
+        logs = []
         for file_key in parquet_files:
             try:
             # S3에서 Parquet 파일을 읽기
@@ -62,65 +59,57 @@ def get_logs(bucket_name: str = "t1-tu-data", directory: str = 'view_detail_log/
                 # BytesIO를 사용하여 Parquet 파일을 pandas로 읽기
                 parquet_data = BytesIO(obj['Body'].read())
                 df = pd.read_parquet(parquet_data)  # pyarrow 또는 fastparquet 필요
-                all_logs.append(df)
+                logs.append(df)
             except Exception as e:
                 print(f"Error reading file {file_key}: {e}")
+        
+         # 전체 로그 데이터 결합
+        all_logs = pd.concat(logs, ignore_index=True)
 
-        if all_logs:
-            combined_df = pd.concat(all_logs, ignore_index=True)
-            logs = combined_df.to_dict(orient="records")
-            return logs
-        else:
-            print("No valid data found in Parquet files")
-            return []
+        # ticket_id 컬럼만 추출하여 리스트로 반환
+        ticket_ids = all_logs['ticket_id'].tolist()
 
+        return ticket_ids
+        
     except Exception as e:
         print(f"Error reading from S3: {e}")
         return []
 
-# Pydantic 모델 정의
-class RankItem(BaseModel):
-    ticket_id: str
-    clicks: int
+def get_top_tickets(ticket_ids: List[str], top_n: int = 8) -> List[str]:
+    # ticket_id 카운트
+    ticket_counter = Counter(ticket_ids)
 
-# MongoDB에서 상위 클릭된 상품 조회
-def get_rank_from_mongo(top: int = 8) -> List[RankItem]:
-    # MongoDB에서 데이터 조회 후 ObjectId를 문자열로 변환
-    items = collection.find().limit(top)
-    valid_items = []
-    for item in items:
-        try:
-            # 필요한 필드가 모두 있는 경우에만 RankItem으로 변환
-            valid_item = RankItem(**{
-                "ticket_id": item.get("ticket_id", "unknown"),  # 기본값 설정
-                "clicks": item.get("clicks", 0)  # 기본값 설정
-            })
-            valid_items.append(valid_item)
-        except ValidationError as e:
-            print(f"Validation failed for item {item}: {e}")
-    return valid_items
+    # 상위 top_n 개 ticket_id 추출
+    top_ticket_ids = ticket_counter.most_common(top_n)
 
-# FastAPI 라우터 정의
-@app.get("/rank", response_model=List[RankItem])
-async def get_rank(top: int = 8):
-    # MongoDB에서 데이터 확인
-    top_products = get_rank_from_mongo(top)
-    if not top_products:  # MongoDB에 데이터가 없을 경우
-        logs = get_logs()
-        if not logs:  # logs가 없으면 에러 메시지와 함께 빈 리스트 반환
-            print("No logs available or failed to fetch logs.")
-            return []
+    return [ticket_id for ticket_id, _ in top_ticket_ids]
 
-        logs_df = pd.DataFrame(logs)
+@app.get("/top_tickets/")
+async def top_tickets():
+    # S3에서 로그 데이터 가져오기
+    ticket_ids = get_logs()
 
-        if 'ticket_id' in logs_df.columns:
-            count_df = logs_df.groupby('ticket_id').size().reset_index(name='clicks')
-            top_products = count_df.nlargest(top, 'clicks').to_dict('records')
+    if not ticket_ids:
+        raise HTTPException(status_code=404, detail="No logs found")
+
+    # 상위 8개 ticket_id 추출
+    top_ticket_ids = get_top_tickets(ticket_ids)
+
+    # 상위 ticket_id에 해당하는 ticket 정보 가져오기
+    top_ticket_info = []
+    for ticket_id in top_ticket_ids:
+        ticket_data = ticket_collection.find_one({"_id": ObjectId(ticket_id)})
+
+        if ticket_data:
+            ticket_info = {
+                "title": ticket_data.get("title", ""),
+                "start_date": ticket_data.get("start_date", ""),
+                "end_date": ticket_data.get("end_date", ""),
+                "poster_url": ticket_data.get("poster_url", ""),
+                "location": ticket_data.get("location", "")
+            }
+            top_ticket_info.append(ticket_info)
         else:
-            print("No 'ticket_id' column in logs.")
-            return []
+            top_ticket_info.append({"ticket_id": ticket_id, "error": "Ticket not found in collection"})
 
-        # 저장된 데이터 Pydantic 모델로 변환
-        top_products = get_rank_from_mongo(top)
-
-    return top_products
+    return {"top_tickets": top_ticket_info}
