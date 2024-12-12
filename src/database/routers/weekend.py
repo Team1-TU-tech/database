@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+router = APIRouter()
 
 mongo_uri = os.getenv("MONGO_URI")
 
