@@ -47,6 +47,11 @@ def parse_date(date_string: str) -> Optional[datetime]:
 
 # 티켓 검색 API
 @router.get("/search", response_model=List[TicketData])
+# 1. jwt가 request header안에 있다는 가정하에, request header안에 있는 토큰을 열어본다
+# 2. 토큰이 없다면 로그인 되지 않은 유저이므로 바로 anonymous 처리 한다
+# 3. 토큰이 있다면 jwt.decode를 통해 토큰안에 담긴 user_id를 꺼내온다
+# 4. user_id를 pymongo find_one("user_id":jwt.decode한 정보)로 필요한 유저 정보를 찾아온다
+# 5. 필요한 정보를 로그파일에 담는다(유저 정보 및 어떤 api를 호출했는가 등등)
 async def search_tickets(
     request: Request, # 요청 객체 추가
     keyword: Optional[str] = Query(None),
@@ -57,13 +62,10 @@ async def search_tickets(
 ):
     
     #############로그데이터를 위한 로직 추가##############
-    #body = await request.json()
     device = request.headers.get("User-Agent", "Unknown")
-    user_id = request.headers.get("id", "anonymous")
-    #user_id = body.get("id", "anonymous")
     ###############################################
     query = {}
-   
+
     # 카테고리 매핑 적용
     if category:
         categories = category.split("/")
@@ -127,18 +129,46 @@ async def search_tickets(
         }
         tickets.append(ticket_data)
     
-    try:
-        log_event(
-            user_id=user_id,  # 헤더에서 받은 user_id 사용
-            device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
-            action="search",   # 액션 종류: 'Search'
-            topic="search_log", #카프카 토픽 구별을 위한 컬럼
-            category=category if category is not None else "None", # 카테고리
-            region=region if region is not None else "None",
-            keyword=keyword if keyword is not None else "None"
-            
-    )
-        print("Log event should have been recorded.")
+    try:  
+        token = request.headers.get('Authorization', 'anonymous')
+        token = token.split('bearer ')[1]
+        if token == '':
+            log_event(
+                user_id='anonymous',  # 헤더에서 받은 user_id 사용
+                gender='unknown',
+                birthday='unknown',
+                device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
+                action="search",   # 액션 종류: 'Search'
+                topic="search_log", #카프카 토픽 구별을 위한 컬럼
+                category=category if category is not None else "None", # 카테고리
+                region=region if region is not None else "None",
+                keyword=keyword if keyword is not None else "None"
+                
+            )
+            print("Anonymous Log event should have been recorded.")
+        else:
+            decoded_token = verify_token(
+                token=token,
+                SECRET_KEY=os.getenv("SECRET_KEY"),
+                ALGORITHM=os.getenv("ALGORITHM"),
+                refresh_token=None,
+                expires_delta=None
+                )
+        
+            user = await user_collection.find_one({"id":decoded_token["id"]},{'_id': 0})
+            log_event(
+                user_id=user["id"],  # 헤더에서 받은 user_id 사용
+                gender=user['gender'],
+                birthday=user['birthday'],
+                device=device,     # 디바이스 정보 (User-Agent 또는 쿼리 파라미터)
+                action="search",   # 액션 종류: 'Search'
+                topic="search_log", #카프카 토픽 구별을 위한 컬럼
+                category=category if category is not None else "None", # 카테고리
+                region=region if region is not None else "None",
+                keyword=keyword if keyword is not None else "None"
+            )
+            print(f"{user["id"]} Log event should have been recorded.")
+
     except Exception as e:
         print(f"Error logging event: {e}")
 
@@ -149,10 +179,7 @@ async def search_tickets(
 async def get_detail_by_id(request: Request, id: str):
 
     #############로그데이터를 위한 로직 추가##############
-    #body = await request.json()
     device = request.headers.get("User-Agent", "Unknown")
-    #user_id = body.get("id", "anonymous")
-    user_id = request.headers.get("id", "anonymous")
     ###############################################
 
     try:
