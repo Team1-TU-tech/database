@@ -5,13 +5,13 @@
 - 사용자 경험을 향상시키기 위해 실시간 로그 데이터 분석 및 머신러닝 기반 추천 기능 제공
 <br></br>
 ## 목차
-- [기술스택](기술스택)
-- [개발기간](개발기간)
-- [API](API)
-- [실행요구사항](실행요구사항)
-- [Contributors](Contributors)
-- [License](License)
-- [문의](문의)
+- [기술스택](#기술스택)
+- [개발기간](#개발기간)
+- [API](#API)
+- [실행요구사항](#실행요구사항)
+- [Contributors](#Contributors)
+- [License](#License)
+- [문의](#문의)
   
 <br></br>
 ## 기술스택
@@ -45,7 +45,7 @@ docker compose build
 # 도커 백그라운드 실행
 docker compose up -d
 ```
-### airflowIU 접속
+### FastAPI 접속
 [localhost:7777](https://localhost:7777)
 ## Contributors
 `hahahellooo`, `hamsunwoo`, `oddsummer56`
