@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-app = FastAPI()
+router = APIRouter()
 
 # MongoDB 연결 설정
 client = AsyncIOMotorClient(os.getenv('MONGO_URI'))  # MongoDB URI
@@ -38,7 +38,7 @@ class SimilarPerformance(BaseModel):
 class Item(BaseModel):
     id: str
 
-@app.get("/recommendation/{item_id}", response_model=List[SimilarPerformance])
+@router.get("/recommendation/{item_id}", response_model=List[SimilarPerformance])
 async def get_similar_performances(item_id: str):
     # MongoDB에서 ID에 해당하는 문서 찾기
     document = await collection.find_one({"_id": ObjectId(item_id)})
