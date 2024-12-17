@@ -1,15 +1,37 @@
 [project]
 name = "database"
-version = "0.1.0"
+version = "0.2.3"
 description = "Default template for PDM package"
 authors = [
     {name = "hahahellooo", email = "hahahello777@gmail.com"},
 ]
-dependencies = []
+dependencies = [
+    "pymongo>=4.9.2",
+    "motor>=3.6.0",
+    "fastapi>=0.115.5",
+    "uvicorn>=0.32.1",
+    "dnspython>=2.7.0",
+    "certifi>=2024.8.30",
+    "pandas>=2.2.3",
+    "pyarrow>=18.1.0",
+    "boto3>=1.35.76",
+    "kafka-python>=2.0.2",
+    "python-dotenv>=1.0.1",
+    "fsspec>=2024.10.0",
+    "pytz>=2024.2",
+    "python-jose>=3.3.0",
+]
 requires-python = "==3.11.*"
 readme = "README.md"
 license = {text = "MIT"}
 
-
 [tool.pdm]
 distribution = false
+
+[dependency-groups]
+test = [
+    "pytest>=8.3.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
