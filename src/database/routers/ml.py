@@ -32,6 +32,7 @@ class SimilarPerformance(BaseModel):
     location: str
     start_date: str
     end_date: str
+    poster_url: str
     _id: ObjectIdStr
 
 # 요청에 대한 모델 정의
