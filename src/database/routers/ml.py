@@ -33,7 +33,7 @@ class SimilarPerformance(BaseModel):
     start_date: str
     end_date: str
     poster_url: str
-    _id: ObjectIdStr
+    id: str
 
 # 요청에 대한 모델 정의
 class Item(BaseModel):
@@ -49,6 +49,10 @@ async def get_similar_performances(item_id: str):
 
     # 'similar_performances' 필드 반환
     similar_performances = document.get("similar_performances", [])
+
+    for performance in similar_performances:
+        performance["id"] = str(performance["_id"])
+        performance.pop("_id",None)
     
     return similar_performances
 
