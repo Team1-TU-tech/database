@@ -102,6 +102,7 @@ async def top_tickets():
 
         if ticket_data:
             ticket_info = {
+                "id": str(ticket_data['_id']),
                 "title": ticket_data.get("title", ""),
                 "start_date": ticket_data.get("start_date", ""),
                 "end_date": ticket_data.get("end_date", ""),
@@ -110,6 +111,6 @@ async def top_tickets():
             }
             top_ticket_info.append(ticket_info)
         else:
-            top_ticket_info.append({"ticket_id": ticket_id, "error": "Ticket not found in collection"})
+            print(f'{ticket_data}가 없습니다')
 
     return {"top_tickets": top_ticket_info}
