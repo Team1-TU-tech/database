@@ -13,17 +13,14 @@ client = MongoClient(os.getenv('MONGO_URI'))
 db = client["test"]
 collection = db["similar"]
 
-@app.get("/performances", summary="Get performances by title")
-async def get_similar_performances(title: str = Query(..., description="Title to filter performances")):
-    """
-    특정 title 값을 기반으로 문서를 조회하고,
-    해당 title에 대한 ID와 관련된 3가지 similar performances를 반환합니다.
-    """
+@app.get("/recommandation")
+async def get_similar_performances(title: str = Query(...)):
+    
     # MongoDB에서 특정 title이 있는 문서 찾기
-    document = collection.find_one({"similar_performances.title": title})
+    document = collection.find_one({"similar_performances.title":"_id" })
     
     if not document:
-        return {"message": f"No performances found for title: {title}"}
+        return {"message": f"No performances found for title: {_id}"}
 
     # 결과를 저장할 리스트
     result = []
@@ -37,7 +34,7 @@ async def get_similar_performances(title: str = Query(..., description="Title to
                 "title": performance.get("title"),
                 "start_date": performance.get("start_date"),
                 "end_date": performance.get("end_date"),
-                "location": performance.get("region")  # 'region' 필드를 location으로 사용
+                "location": performance.get("location")  
             })
 
             # 해당 title을 제외한 다른 3가지 similar_performances 추가
