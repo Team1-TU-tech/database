@@ -9,17 +9,22 @@ def deduplication():
 
     # MongoDB에 연결
     client = MongoClient(os.getenv('MONGO_URI'))
-    db = client["tut"]  # 데이터베이스 이름
-    collection = db["ticket"]  # 컬렉션 이름
+    db = client["test"]  # 데이터베이스 이름
+    collection = db["test"]  # 컬렉션 이름
 
     # 1단계: 중복된 duplicatekey을 찾고, hosts 배열의 크기가 2인 문서는 제외하기
     pipeline = [
         # 중복된 duplicatekey을 그룹화하여 해당 문서들의 _id와 hosts 배열을 수집
         {
+            "$sort": {
+                "hosts": -1 # hosts 배열 크기 기준 내림차순 정렬
+                }
+        },
+        {
             "$group": {
                 "_id": "$duplicatekey",  # duplicatekey을 기준으로 그룹화
-                "count": { "$sum": 1 },
-                "documents": { "$push": "$_id" },
+                "count": { "$sum": 1 },  # 중복된 문서 수 계산
+                "documents": { "$push": "$_id" }, # 해당 그룹의 모든 _id를 수집
                 "hosts": { "$first": "$hosts" }  # 첫 번째 문서의 hosts 배열을 가져옴
             }
         },
@@ -28,8 +33,8 @@ def deduplication():
             "$match": {
                 "count": { "$gt": 1 }  # 중복된 duplicatekey만 필터링
             }
-        }
-    ]
+        },
+]
 
     # 중복된 duplicatekey을 가진 문서들의 _id를 찾음
     duplicates = collection.aggregate(pipeline)
@@ -37,13 +42,10 @@ def deduplication():
     # 2단계: 중복된 문서 중 hosts 배열의 크기가 2인 문서는 제외
     ids_to_delete = []
     for doc in duplicates:
-        title = doc["_id"]
         documents = doc["documents"]
-        hosts = doc["hosts"]
         
-        # hosts 배열의 크기가 1인 문서만 중복 데이터 삭
-        if len(hosts) == 1:제
-            # documents 배열에서 첫 번째 문서를 제외하고 나머지 문서들 삭제 대상으로 추가
+        # documents 배열에서 첫 번째 문서를 제외하고 나머지 문서들 삭제 대상으로 추가
+        if len(documents) > 1:
             ids_to_delete.extend(documents[1:])
 
     # 3단계: 중복된 문서들 삭제
@@ -56,4 +58,4 @@ def deduplication():
     else:
         print("삭제할 문서가 없습니다.")
 
-
+deduplication()
