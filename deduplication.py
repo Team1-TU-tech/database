@@ -58,4 +58,4 @@ def deduplication():
     else:
         print("삭제할 문서가 없습니다.")
 
-deduplication()
+#deduplication()
