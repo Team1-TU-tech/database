@@ -39,10 +39,10 @@ class SimilarPerformance(BaseModel):
 class Item(BaseModel):
     id: str
 
-@router.get("/recommendation/{item_id}", response_model=List[SimilarPerformance])
-async def get_similar_performances(item_id: str):
+@router.get("/recommendation/{id}", response_model=List[SimilarPerformance])
+async def get_similar_performances(id: str):
     # MongoDB에서 ID에 해당하는 문서 찾기
-    document = await collection.find_one({"_id": ObjectId(item_id)})
+    document = await collection.find_one({"_id": ObjectId(id)})
 
     if document is None:
         raise HTTPException(status_code=404, detail="Item not found")
