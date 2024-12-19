@@ -12,26 +12,26 @@ def deduplication():
     db = client["tut"]  # 데이터베이스 이름
     collection = db["ticket"]  # 컬렉션 이름
 
-    # 1단계: 중복된 title을 찾고, hosts 배열의 크기가 2인 문서는 제외하기
+    # 1단계: 중복된 duplicatekey을 찾고, hosts 배열의 크기가 2인 문서는 제외하기
     pipeline = [
-        # 중복된 title을 그룹화하여 해당 문서들의 _id와 hosts 배열을 수집
+        # 중복된 duplicatekey을 그룹화하여 해당 문서들의 _id와 hosts 배열을 수집
         {
             "$group": {
-                "_id": "$title",  # title을 기준으로 그룹화
+                "_id": "$duplicatekey",  # duplicatekey을 기준으로 그룹화
                 "count": { "$sum": 1 },
                 "documents": { "$push": "$_id" },
                 "hosts": { "$first": "$hosts" }  # 첫 번째 문서의 hosts 배열을 가져옴
             }
         },
-        # 2단계: 중복된 title만 찾기 (count > 1)
+        # 2단계: 중복된 duplicatekey만 찾기 (count > 1)
         {
             "$match": {
-                "count": { "$gt": 1 }  # 중복된 title만 필터링
+                "count": { "$gt": 1 }  # 중복된 duplicatekey만 필터링
             }
         }
     ]
 
-    # 중복된 title을 가진 문서들의 _id를 찾음
+    # 중복된 duplicatekey을 가진 문서들의 _id를 찾음
     duplicates = collection.aggregate(pipeline)
 
     # 2단계: 중복된 문서 중 hosts 배열의 크기가 2인 문서는 제외
@@ -41,8 +41,8 @@ def deduplication():
         documents = doc["documents"]
         hosts = doc["hosts"]
         
-        # hosts 배열의 크기가 2인 문서는 삭제에서 제외
-        if len(hosts) >= 2:
+        # hosts 배열의 크기가 1인 문서만 중복 데이터 삭
+        if len(hosts) == 1:제
             # documents 배열에서 첫 번째 문서를 제외하고 나머지 문서들 삭제 대상으로 추가
             ids_to_delete.extend(documents[1:])
 
