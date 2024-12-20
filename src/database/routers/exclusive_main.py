@@ -5,6 +5,7 @@ from typing import List
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
+import datetime
 
 load_dotenv()
 router = APIRouter()
@@ -27,8 +28,11 @@ def serialize_objectid(data):
 @router.get("/exclusive/main", response_model=List[dict])
 def get_limited_sales():
     try:
+        current_date = datetime.datetime.now().strftime("%Y.%m.%d")
         results = collection.aggregate([
-            {"$match": {"hosts": {"$size": 1}}},
+            {"$match": {"hosts": {"$size": 1},
+                        "end_date": {"$gt": current_date}
+            }},
             {"$unwind": "$hosts"},
             {"$group": {
                 "_id": "$hosts.site_id",
