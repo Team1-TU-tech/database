@@ -26,14 +26,13 @@ def get_exclusive_sales(site_id: int = None):
         exclusive_data = []
         for result in results:
             host = result.get("hosts", [])[0]  # 첫 번째 host 가져오기
-            ticket_url = host.get("ticket_url")
 
             exclusive_data.append({
                 "id": str(result.get("_id")),
                 "title": result.get("title"),
                 "start_date": result.get("start_date"),
                 "end_date": result.get("end_date"),
-                "ticket_url": ticket_url,
+                "poster_url": result.get("poster_url"),
                 "location": result.get("location"),
             })
 

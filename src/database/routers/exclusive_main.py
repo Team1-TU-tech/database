@@ -37,7 +37,7 @@ def get_limited_sales():
                     "title": "$title",
                     "start_date": "$start_date",
                     "end_date": "$end_date",
-                    "ticket_url": "$hosts.ticket_url",
+                    "poster_url": "$poster_url",
                     "location": "$location"
                 }},
             }},

@@ -67,6 +67,7 @@ async def search_tickets(
     # 카테고리 매핑 적용
     if category:
         categories = category.split("/")
+        categories.append(category)  # 원래 카테고리도 포함
         query["category"] = {"$in": categories}
 
     if start_date:
@@ -96,7 +97,6 @@ async def search_tickets(
     kst = pytz.timezone('Asia/Seoul')
     today_date = datetime.now(kst)
     today = datetime.strftime(today_date, "%Y.%m.%d")
-
 
     tickets = []
     async for ticket in cursor:
