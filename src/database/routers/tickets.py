@@ -20,7 +20,7 @@ router = APIRouter()
 try:
     client = AsyncIOMotorClient(mongo_uri)
     db = client['tut']
-    collection = db['ticket']
+    collection = db['data']
     print("MongoDB connected successfully!")
 
 except Exception as e:
