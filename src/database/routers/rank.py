@@ -16,7 +16,7 @@ db = client["tut"]
 
 # 컬렉션 참조
 popular_collection = db["popular"]
-collection = db["data"]
+collection = db["ticket"]
 
 class TicketData(BaseModel):
     id: str

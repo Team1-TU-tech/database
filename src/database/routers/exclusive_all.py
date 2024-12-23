@@ -11,7 +11,7 @@ router = APIRouter()
 # MongoDB 연결
 client = MongoClient(os.getenv('MONGO_URI'))
 db = client["tut"]
-collection = db["data"]
+collection = db["ticket"]
 
 # API 정의
 @router.get("/exclusive/all", response_model=List[dict])

@@ -16,7 +16,7 @@ mongo_uri = os.getenv("MONGO_URI")
 try:
     client = AsyncIOMotorClient(mongo_uri)
     db = client['tut']
-    collection = db['data']
+    collection = db['ticket']
 
     print("MongoDB connected successfully!")
     
