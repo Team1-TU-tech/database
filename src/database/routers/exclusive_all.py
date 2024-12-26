@@ -11,7 +11,7 @@ router = APIRouter()
 # MongoDB 연결
 client = MongoClient(os.getenv('MONGO_URI'))
 db = client["tut"]
-collection = db["ticket"]
+collection = db["data"]
 
 # API 정의
 @router.get("/exclusive/all", response_model=List[dict])
@@ -39,6 +39,7 @@ def get_exclusive_sales(site_id: int = None):
                 "end_date": result.get("end_date"),
                 "poster_url": result.get("poster_url"),
                 "location": result.get("location"),
+                "category": result.get("category")
             })
 
         if not exclusive_data:

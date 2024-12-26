@@ -16,7 +16,7 @@ db = client["tut"]
 
 # 컬렉션 참조
 popular_collection = db["popular"]
-collection = db["ticket"]
+collection = db["data"]
 
 class TicketData(BaseModel):
     id: str
@@ -25,6 +25,7 @@ class TicketData(BaseModel):
     start_date: str
     end_date: str
     location: str
+    category: str
 
 @router.get("/popular", response_model=List[TicketData])
 async def get_popular_data():
@@ -42,11 +43,12 @@ async def get_popular_data():
         popular = [
             TicketData(
                 id=str(ticket["_id"]),
-                title=ticket.get("title", "Unknown Title"),
-                poster_url=ticket.get("poster_url", ""),
-                start_date=ticket.get("start_date", "Unknown Start Date"),
-                end_date=ticket.get("end_date", "Unknown End Date"),
-                location=ticket.get("location", "Unknown Location")
+                title=ticket.get("title"),
+                poster_url=ticket.get("poster_url"),
+                start_date=ticket.get("start_date"),
+                end_date=ticket.get("end_date"),
+                location=ticket.get("location"),
+                category=ticket.get("category")
             )
             for ticket in tickets
         ]

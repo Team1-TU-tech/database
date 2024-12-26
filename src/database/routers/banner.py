@@ -13,7 +13,7 @@ router = APIRouter()
 try:
     client = AsyncIOMotorClient(mongo_uri)
     db = client['tut']
-    collection = db['ticket']
+    collection = db['data']
     print("MongoDB connected successfully!")
 except Exception as e:
     print(f"MongoDB connection error: {e}")
@@ -25,6 +25,7 @@ class TicketData(BaseModel):
     poster_url: Optional[str] = None
     start_date: str
     end_date: str
+    category: str
 
 # 배너에 표시할 티켓 데이터를 조회하는 API
 @router.get("/banner", response_model=List[TicketData])
@@ -42,7 +43,8 @@ async def get_banner():
                 title=ticket.get("title"),
                 poster_url=ticket.get("poster_url"),
                 start_date=ticket.get("start_date"),
-                end_date=ticket.get("end_date")
+                end_date=ticket.get("end_date"),
+                category=ticket.get("category")
             ))
         
         return tickets

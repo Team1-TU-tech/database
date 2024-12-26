@@ -20,7 +20,7 @@ router = APIRouter()
 try:
     client = AsyncIOMotorClient(mongo_uri)
     db = client['tut']
-    collection = db['ticket']
+    collection = db['data']
     print("MongoDB connected successfully!")
 
 except Exception as e:
@@ -28,12 +28,13 @@ except Exception as e:
 
 # Pydantic 모델 정의
 class TicketData(BaseModel):
+    id: str
     poster_url: Optional[str]
     title: Optional[str]
     location: Optional[str]
     start_date: Optional[str]
     end_date: Optional[str]
-    id: str
+    category: Optional[str]
     isExclusive: bool
     onSale: bool
 
@@ -62,7 +63,10 @@ async def search_tickets(
     user_id = request.headers.get("id", "anonymous")
     #user_id = body.get("id", "anonymous")
     ###############################################
-    query = {}
+    
+    today = datetime.now().strftime("%Y.%m.%d")
+
+    query = {"end_date":{"$gte":today}}
    
     # 카테고리 매핑 적용
     if category:
@@ -93,11 +97,6 @@ async def search_tickets(
     print(f"MongoDB Query: {query}")
     # MongoDB에서 검색
 
-    # 한국 시간(KST) 기준으로 오늘 날짜 구하기
-    kst = pytz.timezone('Asia/Seoul')
-    today_date = datetime.now(kst)
-    today = datetime.strftime(today_date, "%Y.%m.%d")
-
     tickets = []
     async for ticket in cursor:
         hosts = ticket.get("hosts", [])
@@ -116,12 +115,13 @@ async def search_tickets(
             on_sale = False  # end_date 형식 오류시 on_sale은 False
 
         ticket_data = {
+            "id": str(ticket.get("_id")),
             "poster_url": ticket.get("poster_url"),
             "title": ticket.get("title"),
             "location": ticket.get("location"),
             "start_date": ticket.get("start_date"),
             "end_date": ticket.get("end_date"),
-            "id": str(ticket.get("_id")),
+            "category": ticket.get("category"),
             "isExclusive": isexclusive,
             "onSale": on_sale
         }

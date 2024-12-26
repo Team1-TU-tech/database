@@ -13,7 +13,7 @@ router = APIRouter()
 # MongoDB 연결 설정
 client = MongoClient(os.getenv('MONGO_URI'))  # MongoDB URI
 db = client['tut']  # 사용할 데이터베이스 이름
-collection = db['ticket']  # 사용할 컬렉션 이름
+collection = db['data']  # 사용할 컬렉션 이름
 
 def serialize_objectid(data):
     """ObjectId를 문자열로 변환"""
@@ -42,7 +42,8 @@ def get_limited_sales():
                     "start_date": "$start_date",
                     "end_date": "$end_date",
                     "poster_url": "$poster_url",
-                    "location": "$location"
+                    "location": "$location",
+                    "category": "$category"
                 }},
             }},
             {"$project": {"items": {"$slice": ["$items", 4]}}}
