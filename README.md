@@ -22,7 +22,8 @@
 <br></br>
 ## API 
 
-![image](https://github.com/user-attachments/assets/7dc0defc-7f81-4b30-9a73-69b89a23400b)
+![image](https://github.com/user-attachments/assets/ac32791d-b63e-4766-94a2-316b42e41678)
+
 
 ### search
 - 공연 제목, 카테고리, 날짜, 아티스트 이름, 지역으로 공연 정보 검색
