@@ -22,7 +22,8 @@
 <br></br>
 ## API 
 
-![image](https://github.com/user-attachments/assets/ac32791d-b63e-4766-94a2-316b42e41678)
+![image](https://github.com/user-attachments/assets/ce4fc0a2-a098-4de2-8b38-a8d0eef3fa61)
+
 
 
 ### search
@@ -31,12 +32,16 @@
 - MongoDB에 저장된 공연 정보를 `id` 기준으로 조회
 ### banner
 - 현재 날짜를 제외한 가장 가까운 공연 11개를 추출하여 메인 화면 배너에 표시
-### top_show
+### popular
 - 로그 데이터를 분석하여 가장 많이 클릭된 공연 상위 8개를 추출
 ### this_weekend
 - 현재 날짜를 기준으로 이번 주말에 볼 수 있는 공연 추출
 ### recommendation
-- ML 모델을 활용하여 description 분석 후 `id`에 해당하는 공연과 유사도가 가장 높은 3개 공연 추출 
+- ML 모델을 활용하여 description 분석 후 `id`에 해당하는 공연과 유사도가 가장 높은 3개 공연 추출
+### exclusive_main
+- 단독 판매되는 공연을 예매처별로 4개씩 추출
+### exclusive_all
+- 예매처별 단독 판매되는 공연 전체 조회
 <br></br>
 ## 실행 요구 사항 
 ```bash
