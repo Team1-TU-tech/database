@@ -73,6 +73,8 @@ async def search_tickets(
         categories = category.split("/")
         categories.append(category)  # 원래 카테고리도 포함
         query["category"] = {"$in": categories}
+    else:
+        category = "전체"
 
     if start_date:
         start_date = parse_date(start_date)
@@ -86,12 +88,16 @@ async def search_tickets(
 
     if region:
         query["region"] = region
+    else:
+        region = "전국"
 
     if keyword:
         query["$or"] = [
                 {"title": {"$regex": keyword, "$options": "i"}},
                 {"artist.artist_name": {"$regex": keyword, "$options": "i"}}
                 ]
+    else:
+        keyword = "전체"
 
     cursor = collection.find(query)
     print(f"MongoDB Query: {query}")
